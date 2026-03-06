@@ -1,8 +1,7 @@
 class PackmindCli < Formula
-  desc "Packmind CLI - code review assistant"
+  desc "Packmind CLI"
   homepage "https://github.com/PackmindHub/packmind"
   version "0.20.0"
-  license :cannot_represent
 
   BASE_URL = "https://github.com/PackmindHub/packmind/releases/download/release-cli/#{version}"
 
@@ -27,8 +26,7 @@ class PackmindCli < Formula
 
   def install
     binary = Dir["packmind-cli-*"].first
-    mv binary, "packmind-cli"
-    bin.install "packmind-cli"
+    bin.install binary => "packmind-cli"
   end
 
   test do
