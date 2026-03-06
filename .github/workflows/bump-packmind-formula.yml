@@ -1,0 +1,97 @@
+name: Bump Packmind CLI formula
+
+on:
+  repository_dispatch:
+    types: [packmind-cli-release]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "CLI version to bump to (e.g. 0.21.0)"
+        required: true
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            VERSION="${{ github.event.client_payload.version }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tap repo
+        uses: actions/checkout@v4
+
+      - name: Check if already up to date
+        run: |
+          CURRENT=$(grep 'version "' Formula/packmind-cli.rb | head -1 | sed 's/.*version "//;s/"//')
+          if [ "$CURRENT" = "${{ steps.version.outputs.version }}" ]; then
+            echo "Formula already at version ${{ steps.version.outputs.version }}, skipping."
+            exit 0
+          fi
+
+      - name: Download binaries and compute checksums
+        id: checksums
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BASE_URL="https://github.com/PackmindHub/packmind/releases/download/release-cli/${VERSION}"
+
+          for PLATFORM in macos-arm64 linux-arm64 linux-x64; do
+            FILE="packmind-cli-${PLATFORM}-${VERSION}"
+            curl -sL -o "$FILE" "${BASE_URL}/${FILE}"
+            SHA=$(sha256sum "$FILE" | awk '{print $1}')
+            KEY=$(echo "$PLATFORM" | tr '-' '_')
+            echo "${KEY}=${SHA}" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Update formula
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FORMULA="Formula/packmind-cli.rb"
+
+          sed -i "s/version \"[^\"]*\"/version \"${VERSION}\"/" "$FORMULA"
+
+          # Update sha256 values in order of appearance (macos-arm64, linux-arm64, linux-x64)
+          python3 -c "
+          import re, sys
+
+          sha_values = [
+              '${{ steps.checksums.outputs.macos_arm64 }}',
+              '${{ steps.checksums.outputs.linux_arm64 }}',
+              '${{ steps.checksums.outputs.linux_x64 }}',
+          ]
+
+          with open('$FORMULA', 'r') as f:
+              content = f.read()
+
+          idx = 0
+          def replace_sha(match):
+              global idx
+              new = f'sha256 \"{sha_values[idx]}\"'
+              idx += 1
+              return new
+
+          content = re.sub(r'sha256 \"[a-f0-9]{64}\"', replace_sha, content)
+
+          with open('$FORMULA', 'w') as f:
+              f.write(content)
+          "
+
+      - name: Verify Ruby syntax
+        run: ruby -c Formula/packmind-cli.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/packmind-cli.rb
+          git commit -m "bump packmind-cli to ${{ steps.version.outputs.version }}"
+          git push
