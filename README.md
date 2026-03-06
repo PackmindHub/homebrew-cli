@@ -23,6 +23,8 @@ brew upgrade packmind-cli
 | Linux        | arm64       |
 | Linux        | x64         |
 
+> **Linux prerequisite:** Homebrew requires a compiler to be present, even though the formula installs a pre-built binary. Run `brew install gcc` before installing if you don't have one (e.g. in Docker containers).
+
 ## Automated updates
 
 This tap is automatically updated via GitHub Actions whenever a new CLI release is published.
