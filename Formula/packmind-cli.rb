@@ -27,6 +27,7 @@ class PackmindCli < Formula
   def install
     binary = Dir["packmind-cli-*"].first
     bin.install binary => "packmind-cli"
+    bin.install_symlink "packmind-cli" => "packmind"
   end
 
   test do
