@@ -1,26 +1,26 @@
 class PackmindCli < Formula
   desc "Packmind CLI"
   homepage "https://github.com/PackmindHub/packmind"
-  version "0.28.1"
+  version "0.29.0"
 
   BASE_URL = "https://github.com/PackmindHub/packmind/releases/download/release-cli/#{version}"
 
   on_macos do
     on_arm do
       url "#{BASE_URL}/packmind-cli-macos-arm64-#{version}"
-      sha256 "55ee4e561054fdd944f74a2f2e9adae09c900ce11fa1011b04a454b3b32dc3ca"
+      sha256 "7aa35252ba9398f4210adc1c286d648743af21cfa2c6fd484308da803f1ec70f"
     end
   end
 
   on_linux do
     on_arm do
       url "#{BASE_URL}/packmind-cli-linux-arm64-#{version}"
-      sha256 "a7d0cda46e7dd9446c9a3a021a19a5a76958528bb8d767bfc3e0ff5bc9eabaf4"
+      sha256 "7926ddb42649b3f49fa2e53ba993257eeb2a5812ac20682b0f2bb7f1d373dc21"
     end
 
     on_intel do
       url "#{BASE_URL}/packmind-cli-linux-x64-#{version}"
-      sha256 "d60427e29cb95274b62fae342f35fc99071ee03c2d698bf0e20619c510396cc7"
+      sha256 "bc0c32f4bbf5c206ecc3add42de24ae9eb56fa4084b471a837f4d22d08c0b30f"
     end
   end
 
